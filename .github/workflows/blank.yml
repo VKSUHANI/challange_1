@@ -1,0 +1,34 @@
+name: Python CI Challenge
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - run: pip install --upgrade pip
+    - run: pip install flake8 pytest pandas==1.5.3
+
+    - run: flake8 .
+
+    - name: Run tests and generate report
+      run: python -m pytest --junitxml=pytest-results.xml
+
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Pytest Results
+        path: pytest-results.xml
+        reporter: junit

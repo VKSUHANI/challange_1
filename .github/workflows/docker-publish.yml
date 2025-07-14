@@ -26,6 +26,9 @@ jobs:
 
   integration:
       uses: ./.github/workflows/python-ci-workflow.yml
+      permissions:
+        contents: read
+        packages: write
   build:
     needs: [integration]
     runs-on: ubuntu-latest

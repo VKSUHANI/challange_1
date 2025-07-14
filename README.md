@@ -1,41 +1,48 @@
-# 02_06 Challenge: Develop a CI Workflow
+# 03_04_ci_cd_for_container_images
+This lesson demonstrates how to set up a CI/CD workflow for container images.
 
-## INTRODUCTION
-It’s time for a challenge!
+Specifically, this demo implements a delivery workflow that:
+- Reuses a workflow to run integration tests
+- Collects metadata
+- Builds the image
+- Publishes the image to GitHub Packages
 
-You’re working with a team of data scientists that are just starting out with GitHub Actions.
+## Using the Exercise Files
+1. Create a new repo and upload the files for this lesson.
+1. Rename the file [python-ci-workflow.yml](./python-ci-workflow.yml) so that its located in the `.github/workflows` directory.
 
-The team wants to add a continuous integration workflow to their GitHub repo so that all pushes to the main branch are linted using Flake8 and all tests are run using Pytest.
+        Completing this step is key to having the workflow run properly!
 
-All code in the repo needs to use a specific version of Pandas, a popular Python library. They have code to test for the version but for some reason the test is failing.
+1. In the repo select the *Actions* tab.
+1. Select *New Workflow*.
+1. Select and configure the workflow *Publish Docker Container*.
+1. Under `jobs`, add an ID named “integration” and the keyword `uses` followed by the path to `python-ci-workflow.yml`.
 
-They’d also like to find some way to make it easier to summarize the tests being run in the repo.
+    _NOTE that the path to the workflow starts with `./` and contains the full path the workflow file._
 
-## REQUIREMENTS
-Help the team set up a continuous integration pipeline using a GitHub Actions starter workflow.
+    Add a permissions block followed by `contents: read` and `checks: write`.
 
-1. Start by creating a new repo and adding the exercise files for this challenge.
+    The completed call to the reused workflow should be similar to the following:
 
-    - [requirements.txt](./requirements.txt)
-    - [test_pandas_version.py](./test_pandas_version.py)
 
-1. Use the GitHub Actions web interface to create a starter workflow.
-1. Run the workflow and observe the problems the team is referring to.
-1. Fix any errors in the code so that the tests pass successfully.
-1. Update the workflow to add a summary of the tests being run. 
-    1. Update the workflow so that it has permissions to create checks in the Actions interface.  
-    1. Update the call to `pytest` so that it creates a JUnit report named `junit.xml`.
-        
-            python -m pytest --verbose --junit-xml=junit.xml
-            
-    1. Add a new step that uses the [JUnit Report Action](https://github.com/marketplace/actions/junit-report-action) from the GitHub Marketplace:
+        jobs:
+            integration:
+                uses: ./.github/workflows/python-ci-workflow.yml
+                permissions:
+                  contents: read
+                  checks: write
 
-            - name: Publish Test Report
-            uses: mikepenz/action-junit-report@v3
-            if: success() || failure() # always run even if the previous step fails
-            with:
-                report_paths: '**/junit.xml'
-                detailed_summary: true
-                include_passed: true
+1. Under the job with the ID `build`, add `needs`, followed by the ID for the integration job.  This will cause the `build` job to wait for the `integration` job to complete.
 
-This challenge should take about fifteen minutes to complete.
+        build:
+            needs: [integration]
+
+1. Select *Commit changes...* and then select *Commit changes*.
+1. Select the *Actions* tab.
+1. Select the running workflow.
+1. Observe the `integration/build` job followed by the `build` job.
+1. Observe the updates to the Actions UI as the `integration/build` job completes.
+1. Once the workflow completes, select the *Code* tab.
+1. Refresh the page as needed until the package is listed under *Packages*.
+1. Select the package and review the details on the package page.
+
